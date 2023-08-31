@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      level:
+        description: 'Bump version by'
+        required: true
+        default: 'minor'
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+          - release
+          - rc
+          - beta
+          - alpha
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PAT }}
+      - name: Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: Dependencies
+        run: |
+          sudo apt-get install -y libsasl2-dev
+          cargo install cargo-release
+      - name: Git Config
+        run: |
+          git config --global user.name "Michael Krolikowski"
+          git config --global user.email "mkroli@yahoo.de"
+      - name: Release
+        uses: actions-rs/cargo@v1
+        with:
+          command: release
+          args: -x --no-confirm --no-publish ${{ inputs.level }}

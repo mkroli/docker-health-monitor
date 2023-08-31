@@ -1,0 +1,177 @@
+name: Build
+
+on:
+  push:
+    branches: [ "main" ]
+    tags: [ '*' ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --locked --all-features
+      - name: Test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --locked --all-features
+      - name: Format
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --check
+      - name: Clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: -- -Dwarnings
+
+  build:
+    name: Build Artifact (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            suffix: x86_64-linux-gnu
+            cargo: cargo
+          - target: x86_64-unknown-linux-musl
+            suffix: x86_64-linux-musl
+            cargo: cross
+          - target: aarch64-unknown-linux-musl
+            suffix: aarch64-linux-musl
+            cargo: cross
+          - target: arm-unknown-linux-musleabihf
+            suffix: arm-linux-musleabihf
+            cargo: cross
+          - target: armv7-unknown-linux-musleabihf
+            suffix: armv7-linux-musleabihf
+            cargo: cross
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+      - name: Cross Installation
+        run: cargo install cross
+        if: ${{ matrix.cargo == 'cross' }}
+      - name: Build
+        run: |
+          ${{ matrix.cargo }} build --release --locked --target ${{ matrix.target }}
+          mv target/${{ matrix.target }}/release/docker-health-monitor docker-health-monitor_${{ matrix.suffix }}
+      - name: Store Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: docker-health-monitor_${{ matrix.suffix }}
+          path: docker-health-monitor_${{ matrix.suffix }}
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: docker-health-monitor_${{ matrix.suffix }}
+
+  container:
+    name: Container Images (${{ matrix.arch }})
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - arch: linux/amd64
+            suffix: x86_64-linux-musl
+            short_suffix: x86_64-linux
+          - arch: linux/aarch64
+            suffix: aarch64-linux-musl
+            short_suffix: aarch64-linux
+          - arch: linux/arm/v6
+            suffix: arm-linux-musleabihf
+            short_suffix: armv6-linux
+          - arch: linux/arm/v7
+            suffix: armv7-linux-musleabihf
+            short_suffix: armv7-linux
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup qemu
+        uses: docker/setup-qemu-action@v2
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: GitHub Container Registry Login
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Retrieve Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: docker-health-monitor_${{ matrix.suffix }}
+          path: build/
+      - name: Prepare Dockerfile
+        run: |
+          mv build/docker-health-monitor_${{ matrix.suffix }} build/docker-health-monitor
+          chmod 0755 build/docker-health-monitor
+          echo 'FROM scratch'                  > build/Dockerfile
+          echo 'ADD docker-health-monitor /docker-health-monitor' >> build/Dockerfile
+          echo 'ENTRYPOINT ["/docker-health-monitor"]'  >> build/Dockerfile
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          context: build
+          platforms: ${{ matrix.arch }}
+          push: true
+          tags: |
+            "ghcr.io/mkroli/docker-health-monitor:latest-${{ matrix.short_suffix }}"
+            "ghcr.io/mkroli/docker-health-monitor:${{ github.ref_name }}-${{ matrix.short_suffix }}"
+
+  container_manifest:
+    name: Container Manifest
+    needs: container
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: GitHub Container Registry Login
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create and push tag manifest
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          docker manifest create \
+            ghcr.io/mkroli/docker-health-monitor:${{ github.ref_name }} \
+            --amend ghcr.io/mkroli/docker-health-monitor:${{ github.ref_name }}-x86_64-linux \
+            --amend ghcr.io/mkroli/docker-health-monitor:${{ github.ref_name }}-aarch64-linux \
+            --amend ghcr.io/mkroli/docker-health-monitor:${{ github.ref_name }}-armv7-linux
+          docker manifest push \
+            ghcr.io/mkroli/docker-health-monitor:${{ github.ref_name }}
+      - name: Create and push latest manifest
+        run: |
+          docker manifest create \
+            ghcr.io/mkroli/docker-health-monitor:latest \
+            --amend ghcr.io/mkroli/docker-health-monitor:latest-x86_64-linux \
+            --amend ghcr.io/mkroli/docker-health-monitor:latest-aarch64-linux \
+            --amend ghcr.io/mkroli/docker-health-monitor:latest-armv7-linux
+          docker manifest push \
+            ghcr.io/mkroli/docker-health-monitor:latest
