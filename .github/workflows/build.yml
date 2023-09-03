@@ -186,4 +186,8 @@ jobs:
         uses: Chizkiyahu/delete-untagged-ghcr-action@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          repository_owner: ${{ github.repository_owner }}
+          repository: ${{ github.repository }}
+          package_name: 'docker-health-monitor'
+          untagged_only: true
           owner_type: user
