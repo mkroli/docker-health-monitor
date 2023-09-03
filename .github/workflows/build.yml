@@ -44,6 +44,7 @@ jobs:
 
   build:
     name: Build Artifact (${{ matrix.target }})
+    needs: check
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -175,3 +176,14 @@ jobs:
             --amend ghcr.io/mkroli/docker-health-monitor:latest-armv7-linux
           docker manifest push \
             ghcr.io/mkroli/docker-health-monitor:latest
+
+  ghcr_cleanup:
+    name: GHCR Cleanup
+    needs: container_manifest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete all containers from repository without tags
+        uses: Chizkiyahu/delete-untagged-ghcr-action@v2
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          owner_type: user
