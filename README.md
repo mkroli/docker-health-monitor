@@ -34,4 +34,8 @@ Options:
       --restart-interval <MILLISECONDS>  [env: DHM_RESTART_INTERVAL=]
   -h, --help                             Print help
   -V, --version                          Print version
+
+Docker connection:
+      --unix-socket <PATH>  [env: DHM_DOCKER_UNIX_SOCKET=]
+      --http <URL>          [env: DHM_DOCKER_HTTP_URL=]
 ```
