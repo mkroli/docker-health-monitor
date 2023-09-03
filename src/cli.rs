@@ -17,8 +17,9 @@
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::time::Duration;
 
-use clap::ColorChoice;
-use clap::Parser;
+use anyhow::Result;
+use bollard::{Docker, API_DEFAULT_VERSION};
+use clap::{Args, ColorChoice, Parser};
 
 #[derive(Parser, Debug)]
 #[command(
@@ -32,17 +33,58 @@ use clap::Parser;
 pub struct Cli {
     #[arg(
         long = "prometheus",
-        env = "DHM_PROMETHEUS_ADDRESS",
         value_name = "ADDRESS",
         default_value_t = SocketAddr::new(IpAddr::from(Ipv4Addr::UNSPECIFIED), 9092),
+        env = "DHM_PROMETHEUS_ADDRESS",
     )]
     pub prometheus_address: SocketAddr,
     #[arg(
         long = "restart-interval",
-        env = "DHM_RESTART_INTERVAL",
-        value_name = "MILLISECONDS"
+        value_name = "MILLISECONDS",
+        env = "DHM_RESTART_INTERVAL"
     )]
     pub restart_interval: Option<u64>,
+    #[command(flatten, next_help_heading = "Docker connection")]
+    pub connection: DockerConnection,
+}
+
+#[derive(Args, Debug)]
+#[group(required = false, multiple = false)]
+pub struct DockerConnection {
+    #[arg(
+        long = "unix-socket",
+        value_name = "PATH",
+        env = "DHM_DOCKER_UNIX_SOCKET"
+    )]
+    unix_socket: Option<String>,
+    #[arg(long = "http", value_name = "URL", env = "DHM_DOCKER_HTTP_URL")]
+    http_url: Option<String>,
+}
+
+impl DockerConnection {
+    fn unix_connection(&self) -> Option<Result<Docker>> {
+        self.unix_socket
+            .as_ref()
+            .map(|path| Docker::connect_with_unix(path, 3, API_DEFAULT_VERSION).map_err(Into::into))
+    }
+
+    fn http_connection(&self) -> Option<Result<Docker>> {
+        self.http_url.as_ref().map(|http_url| {
+            Docker::connect_with_http(http_url, 3, API_DEFAULT_VERSION).map_err(Into::into)
+        })
+    }
+
+    fn default_connection() -> Result<Docker> {
+        Docker::connect_with_local_defaults().map_err(Into::into)
+    }
+
+    pub fn connect(&self) -> Result<Docker> {
+        let docker = self
+            .unix_connection()
+            .or_else(|| self.http_connection())
+            .unwrap_or_else(DockerConnection::default_connection)?;
+        Ok(docker)
+    }
 }
 
 impl Cli {

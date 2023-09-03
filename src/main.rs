@@ -33,12 +33,13 @@ async fn main() -> Result<()> {
     logging::init()?;
     let cli = Cli::parse();
 
+    let docker = cli.connection.connect()?;
     let metrics = Metrics::new()?;
     let meter = metrics.meter_provider();
     let server = tokio::spawn(metrics.run(cli.prometheus_address));
 
     let interval = cli.restart_interval();
-    let monitor = DockerHealthMonitor::new(interval, &meter).await?;
+    let monitor = DockerHealthMonitor::new(docker, interval, &meter).await?;
     let (server, monitor) = tokio::join!(server, monitor.run());
     monitor?;
     server??;
