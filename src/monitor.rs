@@ -20,8 +20,8 @@ use std::time::Duration;
 use anyhow::{format_err, Result};
 use bollard::container::ListContainersOptions;
 use bollard::Docker;
-use opentelemetry::KeyValue;
 use opentelemetry::metrics::{Counter, Meter, ObservableGauge, Observer};
+use opentelemetry::KeyValue;
 use tokio::time;
 
 use crate::container_health::ContainerHealth;
