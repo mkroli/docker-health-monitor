@@ -183,11 +183,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Delete all containers from repository without tags
-        uses: Chizkiyahu/delete-untagged-ghcr-action@v2
+        uses: camargo/delete-untagged-action@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          repository_owner: ${{ github.repository_owner }}
-          repository: ${{ github.repository }}
-          package_name: 'docker-health-monitor'
-          untagged_only: true
-          owner_type: user
+         github-token: ${{ secrets.GITHUB_TOKEN }}
