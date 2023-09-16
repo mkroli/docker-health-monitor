@@ -2,7 +2,7 @@ name: Build
 
 on:
   push:
-    branches: [ "*" ]
+    branches: [ "main" ]
     tags: [ '*' ]
   pull_request:
     branches: [ "main" ]
@@ -109,6 +109,8 @@ jobs:
           - arch: linux/arm/v7
             suffix: armv7-linux-musleabihf
             short_suffix: armv7-linux
+    outputs:
+      docker-meta.tags: ${{ steps.docker-meta.outputs.tags }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -166,10 +168,10 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           docker manifest create \
-            ghcr.io/mkroli/docker-health-monitor:${{ jobs.build.steps.docker-meta.outputs.tags }} \
-            --amend ghcr.io/mkroli/docker-health-monitor:${{ jobs.build.docker-meta.outputs.tags }}-x86_64-linux \
-            --amend ghcr.io/mkroli/docker-health-monitor:${{ jobs.build.outputs.tags }}-aarch64-linux \
-            --amend ghcr.io/mkroli/docker-health-monitor:${{ steps.docker-meta.outputs.tags }}-armv7-linux
+            ghcr.io/mkroli/docker-health-monitor:${{ needs.build.outputs.docker-meta.tags }} \
+            --amend ghcr.io/mkroli/docker-health-monitor:${{ needs.build.outputs.docker-meta.tags }}-x86_64-linux \
+            --amend ghcr.io/mkroli/docker-health-monitor:${{ needs.build.outputs.docker-meta.tags }}-aarch64-linux \
+            --amend ghcr.io/mkroli/docker-health-monitor:${{ needs.build.outputs.docker-meta.tags }}-armv7-linux
           docker manifest push \
             ghcr.io/mkroli/docker-health-monitor:${{ github.ref_name }}
       - name: Create and push latest manifest
