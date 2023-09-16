@@ -147,9 +147,7 @@ jobs:
           context: build
           platforms: ${{ matrix.arch }}
           push: true
-          tags: |
-            "ghcr.io/mkroli/docker-health-monitor:latest-${{ matrix.short_suffix }}"
-            "ghcr.io/mkroli/docker-health-monitor:${{ steps.docker-meta.outputs.tags }}-${{ matrix.short_suffix }}"
+          tags: "${{ steps.docker-meta.outputs.tags }}-${{ matrix.short_suffix }}"
 
   container_manifest:
     name: Container Manifest
@@ -165,24 +163,14 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Create and push tag manifest
-        if: startsWith(github.ref, 'refs/tags/')
         run: |
           docker manifest create \
-            ghcr.io/mkroli/docker-health-monitor:${{ needs.build.outputs.docker-meta.tags }} \
-            --amend ghcr.io/mkroli/docker-health-monitor:${{ needs.build.outputs.docker-meta.tags }}-x86_64-linux \
-            --amend ghcr.io/mkroli/docker-health-monitor:${{ needs.build.outputs.docker-meta.tags }}-aarch64-linux \
-            --amend ghcr.io/mkroli/docker-health-monitor:${{ needs.build.outputs.docker-meta.tags }}-armv7-linux
+            ${{ needs.build.outputs.docker-meta.tags }} \
+            --amend ${{ needs.build.outputs.docker-meta.tags }}-x86_64-linux \
+            --amend ${{ needs.build.outputs.docker-meta.tags }}-aarch64-linux \
+            --amend ${{ needs.build.outputs.docker-meta.tags }}-armv7-linux
           docker manifest push \
-            ghcr.io/mkroli/docker-health-monitor:${{ github.ref_name }}
-      - name: Create and push latest manifest
-        run: |
-          docker manifest create \
-            ghcr.io/mkroli/docker-health-monitor:latest \
-            --amend ghcr.io/mkroli/docker-health-monitor:latest-x86_64-linux \
-            --amend ghcr.io/mkroli/docker-health-monitor:latest-aarch64-linux \
-            --amend ghcr.io/mkroli/docker-health-monitor:latest-armv7-linux
-          docker manifest push \
-            ghcr.io/mkroli/docker-health-monitor:latest
+            ${{ needs.build.outputs.docker-meta.tags }}
 
   ghcr_cleanup:
     name: GHCR Cleanup
