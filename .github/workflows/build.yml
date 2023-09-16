@@ -165,12 +165,12 @@ jobs:
       - name: Create and push tag manifest
         run: |
           docker manifest create \
-            ${{ needs.build.outputs.docker-meta.tags }} \
-            --amend ${{ needs.build.outputs.docker-meta.tags }}-x86_64-linux \
-            --amend ${{ needs.build.outputs.docker-meta.tags }}-aarch64-linux \
-            --amend ${{ needs.build.outputs.docker-meta.tags }}-armv7-linux
+            ${{ needs.container.outputs.docker-meta.tags }} \
+            --amend ${{ needs.container.outputs.docker-meta.tags }}-x86_64-linux \
+            --amend ${{ needs.container.outputs.docker-meta.tags }}-aarch64-linux \
+            --amend ${{ needs.container.outputs.docker-meta.tags }}-armv7-linux
           docker manifest push \
-            ${{ needs.build.outputs.docker-meta.tags }}
+            ${{ needs.container.outputs.docker-meta.tags }}
 
   ghcr_cleanup:
     name: GHCR Cleanup
