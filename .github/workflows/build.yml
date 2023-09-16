@@ -131,9 +131,13 @@ jobs:
         run: |
           mv build/docker-health-monitor_${{ matrix.suffix }} build/docker-health-monitor
           chmod 0755 build/docker-health-monitor
-          echo 'FROM scratch'                  > build/Dockerfile
+          echo 'FROM scratch'                                      > build/Dockerfile
           echo 'ADD docker-health-monitor /docker-health-monitor' >> build/Dockerfile
-          echo 'ENTRYPOINT ["/docker-health-monitor"]'  >> build/Dockerfile
+          echo 'ENTRYPOINT ["/docker-health-monitor"]'            >> build/Dockerfile
+      - name: Docker meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/mkroli/docker-health-monitor
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
