@@ -24,7 +24,7 @@ fern = "0.6"
 clap = { version = "4", features = ["derive", "env"]}
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "time"] }
 futures = "0.3"
-bollard = "0.14"
+bollard = "0.15"
 opentelemetry = "0.20"
 prometheus = "0.13"
 opentelemetry-prometheus = "0.13"
