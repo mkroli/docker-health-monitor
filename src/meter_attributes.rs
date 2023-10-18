@@ -52,7 +52,7 @@ impl MeterAttributes for ContainerSummary {
                     .map(|(k, v)| KeyValue::new(format!("label_{k}"), v))
                     .collect()
             })
-            .unwrap_or(Vec::new());
+            .unwrap_or_default();
 
         let mut attributes: Vec<KeyValue> = vec![id, name, image].into_iter().flatten().collect();
         attributes.extend(labels);

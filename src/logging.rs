@@ -39,7 +39,7 @@ pub trait Informational {
 
 impl Informational for ContainerSummary {
     fn info(&self) -> String {
-        let container_names_desc = self.names.clone().unwrap_or(Vec::new()).join(", ");
+        let container_names_desc = self.names.clone().unwrap_or_default().join(", ");
         let container_id_desc = self.id.clone().unwrap_or("n/a".to_string());
         format!("{container_names_desc} ({container_id_desc})")
     }
