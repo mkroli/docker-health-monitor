@@ -27,6 +27,6 @@ futures = "0.3"
 bollard = "0.15"
 opentelemetry = "0.20"
 prometheus = "0.13"
-opentelemetry-prometheus = "0.13"
+opentelemetry-prometheus = "0.14"
 hyper = "0.14"
 axum = { version = "0.6", features = ["headers", "http1", "http2"] }
