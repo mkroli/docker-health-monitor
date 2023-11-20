@@ -29,5 +29,5 @@ opentelemetry = "0.21"
 opentelemetry_sdk = "0.21"
 prometheus = "0.13"
 opentelemetry-prometheus = "0.14"
-hyper = "0.14"
+hyper = "1.0"
 axum = { version = "0.6", features = ["headers", "http1", "http2"] }
