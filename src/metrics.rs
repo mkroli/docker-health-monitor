@@ -19,17 +19,18 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use axum::extract::State;
-use axum::headers::ContentType;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
+use axum::Router;
 use axum::routing::get;
-use axum::{Router, TypedHeader};
-use hyper::Server;
+use axum_extra::headers::ContentType;
+use axum_extra::TypedHeader;
+use opentelemetry::{KeyValue, metrics::MeterProvider as _};
 use opentelemetry::metrics::Meter;
-use opentelemetry::{metrics::MeterProvider as _, KeyValue};
 use opentelemetry_sdk::metrics::MeterProvider;
 use opentelemetry_sdk::Resource;
 use prometheus::{Encoder, Registry, TextEncoder};
+use tokio::net::TcpListener;
 
 pub const COLLECT_PERIOD_MS: u64 = 10000;
 
@@ -75,9 +76,8 @@ impl Metrics {
         let app = Router::new()
             .route("/metrics", get(Metrics::metrics_handler))
             .with_state(Arc::new(self));
-        Server::try_bind(&bind_address)?
-            .serve(app.into_make_service())
-            .await?;
+        let listener = TcpListener::bind(&bind_address).await?;
+        axum::serve(listener, app).await?;
         Ok(())
     }
 
