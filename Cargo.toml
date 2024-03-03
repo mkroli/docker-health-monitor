@@ -24,10 +24,10 @@ fern = "0.6"
 clap = { version = "4", features = ["derive", "env"]}
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "time"] }
 futures = "0.3"
-bollard = "0.15"
-opentelemetry = "0.21"
-opentelemetry_sdk = "0.21"
+bollard = "0.16"
+opentelemetry = "0.22"
+opentelemetry_sdk = "0.22"
 prometheus = "0.13"
-opentelemetry-prometheus = "0.14"
+opentelemetry-prometheus = "0.15"
 axum = { version = "0.7", default-features = false, features = ["tokio", "http1", "http2"] }
 axum-extra = { version = "0.9", default-features = false, features = ["typed-header"] }
