@@ -416,7 +416,7 @@ dependencies = [
 
 [[package]]
 name = "docker-health-monitor"
-version = "0.6.11"
+version = "0.6.12"
 dependencies = [
  "anyhow",
  "axum",
