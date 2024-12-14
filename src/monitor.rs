@@ -20,7 +20,7 @@ use std::time::Duration;
 use anyhow::{format_err, Result};
 use bollard::container::ListContainersOptions;
 use bollard::Docker;
-use opentelemetry::metrics::{Counter, Meter, ObservableGauge, Observer};
+use opentelemetry::metrics::{AsyncInstrument, Counter, Meter};
 use opentelemetry::KeyValue;
 use tokio::time;
 
@@ -45,19 +45,19 @@ impl DockerHealthMonitor {
         let error_counter = meter
             .u64_counter("dhm.errors")
             .with_description("Docker client errors")
-            .init();
+            .build();
         let restart_counter = meter
             .u64_counter("dhm.restarts")
             .with_description(
                 "Number of successful restarts triggered due to a container being unhealthy",
             )
-            .init();
+            .build();
         let failed_restart_counter = meter
             .u64_counter("dhm.restart_failures")
             .with_description(
                 "Number of failed restarts triggered due to a container being unhealthy",
             )
-            .init();
+            .build();
 
         DockerHealthMonitor::register_health_state_check(
             meter,
@@ -79,22 +79,20 @@ impl DockerHealthMonitor {
         docker: Docker,
         error_counter: Counter<u64>,
     ) -> Result<()> {
-        let container_health = meter
+        meter
             .u64_observable_gauge("dhm.health")
             .with_description("The current state of the healthcheck")
-            .init();
-        meter.register_callback(&[container_health.as_any()], move |observer| {
-            if let Err(e) = tokio::task::block_in_place(|| {
-                futures::executor::block_on(DockerHealthMonitor::check_health_state(
-                    &docker,
-                    observer,
-                    &container_health,
-                ))
-            }) {
-                error_counter.add(1, &[]);
-                log::error!("HealthCheck failed: {e}")
-            }
-        })?;
+            .with_callback(move |observer| {
+                if let Err(e) = tokio::task::block_in_place(|| {
+                    futures::executor::block_on(DockerHealthMonitor::check_health_state(
+                        &docker, observer,
+                    ))
+                }) {
+                    error_counter.add(1, &[]);
+                    log::error!("HealthCheck failed: {e}")
+                }
+            })
+            .build();
         Ok(())
     }
 
@@ -109,8 +107,7 @@ impl DockerHealthMonitor {
 
     async fn check_health_state(
         docker: &Docker,
-        observer: &dyn Observer,
-        container_health_gauge: &ObservableGauge<u64>,
+        observer: &dyn AsyncInstrument<u64>,
     ) -> Result<()> {
         let options = ListContainersOptions::<String> {
             all: true,
@@ -129,7 +126,7 @@ impl DockerHealthMonitor {
             for health_status in ContainerHealth::values() {
                 attributes.push(KeyValue::new("health", health_status.clone()));
                 let value = container_health_state == health_status;
-                observer.observe_u64(container_health_gauge, value.into(), &attributes);
+                observer.observe(value.into(), &attributes);
                 attributes.pop();
             }
         }
