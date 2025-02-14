@@ -26,7 +26,6 @@ use axum::Router;
 use axum_extra::headers::ContentType;
 use axum_extra::TypedHeader;
 use opentelemetry::metrics::{Meter, MeterProvider};
-use opentelemetry::KeyValue;
 use opentelemetry_sdk::metrics::SdkMeterProvider;
 use opentelemetry_sdk::Resource;
 use prometheus::{Encoder, Registry, TextEncoder};
@@ -64,10 +63,11 @@ impl Metrics {
             .build()?;
         let provider = SdkMeterProvider::builder()
             .with_reader(exporter)
-            .with_resource(Resource::new([KeyValue::new(
-                "service.name",
-                env!("CARGO_PKG_NAME"),
-            )]))
+            .with_resource(
+                Resource::builder()
+                    .with_service_name(env!("CARGO_PKG_NAME"))
+                    .build(),
+            )
             .build();
         Ok(Metrics { registry, provider })
     }
