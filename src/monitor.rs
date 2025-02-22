@@ -17,11 +17,11 @@
 use std::collections::HashMap;
 use std::time::Duration;
 
-use anyhow::{format_err, Result};
-use bollard::container::ListContainersOptions;
+use anyhow::{Result, format_err};
 use bollard::Docker;
-use opentelemetry::metrics::{AsyncInstrument, Counter, Meter};
+use bollard::container::ListContainersOptions;
 use opentelemetry::KeyValue;
+use opentelemetry::metrics::{AsyncInstrument, Counter, Meter};
 use tokio::time;
 
 use crate::container_health::ContainerHealth;

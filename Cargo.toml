@@ -1,7 +1,7 @@
 [package]
 name = "docker-health-monitor"
 version = "0.7.0"
-edition = "2021"
+edition = "2024"
 description = "Prometheus exporter of docker container's health checks with the option to restart unhealthy containers."
 license = "Apache-2.0"
 repository = "https://github.com/mkroli/docker-health-monitor"

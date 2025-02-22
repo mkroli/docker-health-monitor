@@ -18,16 +18,16 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 
 use anyhow::Result;
+use axum::Router;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
-use axum::Router;
-use axum_extra::headers::ContentType;
 use axum_extra::TypedHeader;
+use axum_extra::headers::ContentType;
 use opentelemetry::metrics::{Meter, MeterProvider};
-use opentelemetry_sdk::metrics::SdkMeterProvider;
 use opentelemetry_sdk::Resource;
+use opentelemetry_sdk::metrics::SdkMeterProvider;
 use prometheus::{Encoder, Registry, TextEncoder};
 use tokio::net::TcpListener;
 
