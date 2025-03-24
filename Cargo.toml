@@ -28,6 +28,6 @@ bollard = "0.18"
 opentelemetry = "0.28"
 opentelemetry_sdk = "0.28"
 prometheus = "0.13"
-opentelemetry-prometheus = "0.28"
+opentelemetry-prometheus = "0.29"
 axum = { version = "0.8", default-features = false, features = ["tokio", "http1", "http2"] }
 axum-extra = { version = "0.10", default-features = false, features = ["typed-header"] }
