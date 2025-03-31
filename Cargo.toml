@@ -25,9 +25,9 @@ clap = { version = "4", features = ["derive", "env"]}
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "time"] }
 futures = "0.3"
 bollard = "0.18"
-opentelemetry = "0.28"
-opentelemetry_sdk = "0.28"
+opentelemetry = "0.29"
+opentelemetry_sdk = "0.29"
 prometheus = "0.13"
-opentelemetry-prometheus = "0.28"
+opentelemetry-prometheus = "0.29"
 axum = { version = "0.8", default-features = false, features = ["tokio", "http1", "http2"] }
 axum-extra = { version = "0.10", default-features = false, features = ["typed-header"] }
