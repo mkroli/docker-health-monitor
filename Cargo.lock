@@ -405,7 +405,7 @@ dependencies = [
 
 [[package]]
 name = "docker-health-monitor"
-version = "0.8.5"
+version = "0.9.0"
 dependencies = [
  "anyhow",
  "axum",
