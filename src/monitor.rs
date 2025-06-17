@@ -19,7 +19,9 @@ use std::time::Duration;
 
 use anyhow::{Result, format_err};
 use bollard::Docker;
-use bollard::container::ListContainersOptions;
+use bollard::query_parameters::InspectContainerOptions;
+use bollard::query_parameters::ListContainersOptionsBuilder;
+use bollard::query_parameters::RestartContainerOptions;
 use opentelemetry::KeyValue;
 use opentelemetry::metrics::{AsyncInstrument, Counter, Meter};
 use tokio::time;
@@ -97,7 +99,9 @@ impl DockerHealthMonitor {
     }
 
     async fn health_state(docker: &Docker, container_id: &str) -> Result<ContainerHealth> {
-        let container_inspect = docker.inspect_container(container_id, None).await?;
+        let container_inspect = docker
+            .inspect_container(container_id, None::<InspectContainerOptions>)
+            .await?;
         let container_state = container_inspect.state.ok_or(format_err!(
             "Failed to get state from container {container_id}"
         ))?;
@@ -109,10 +113,7 @@ impl DockerHealthMonitor {
         docker: &Docker,
         observer: &dyn AsyncInstrument<u64>,
     ) -> Result<()> {
-        let options = ListContainersOptions::<String> {
-            all: true,
-            ..Default::default()
-        };
+        let options = ListContainersOptionsBuilder::new().all(true).build();
         let containers = docker.list_containers(Some(options)).await?;
         for container in containers {
             let container_id = container
@@ -136,17 +137,18 @@ impl DockerHealthMonitor {
     async fn restart_unhealthy_containers(&self) -> Result<()> {
         let mut filters = HashMap::new();
         filters.insert("health", vec!["unhealthy"]);
-        let options = ListContainersOptions {
-            all: true,
-            filters,
-            ..Default::default()
-        };
+        let options = ListContainersOptionsBuilder::new()
+            .all(true)
+            .filters(&filters)
+            .build();
         let unhealthy_containers = self.docker.list_containers(Some(options)).await?;
         for container in unhealthy_containers {
             let container_info = container.info();
             log::info!("Restarting unhealthy container: {container_info}");
             if let Some(id) = &container.id {
-                self.docker.restart_container(id, None).await?;
+                self.docker
+                    .restart_container(id, None::<RestartContainerOptions>)
+                    .await?;
                 self.restart_counter.add(1, &container.attributes());
                 log::info!("Restarted unhealthy container: {container_info}");
             } else {
