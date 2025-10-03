@@ -2,10 +2,10 @@ name: Build
 
 on:
   push:
-    branches: [ "main" ]
-    tags: [ '*' ]
+    branches: ["main"]
+    tags: ["*"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 env:
   CARGO_TERM_COLOR: always
@@ -16,9 +16,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: "rustfmt,clippy"
       - name: Build
         run: cargo build --locked --all-features
       - name: Test
@@ -184,4 +186,4 @@ jobs:
       - name: Delete all containers from repository without tags
         uses: camargo/delete-untagged-action@v1
         with:
-         github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
