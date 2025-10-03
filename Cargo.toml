@@ -26,7 +26,7 @@ tokio = { version = "1", features = ["rt-multi-thread", "macros", "time"] }
 futures = "0.3"
 bollard = "0.19"
 opentelemetry = "0.29"
-opentelemetry_sdk = "0.29"
+opentelemetry_sdk = "0.31"
 prometheus = "0.14"
 opentelemetry-prometheus = "0.29"
 axum = { version = "0.8", default-features = false, features = [
