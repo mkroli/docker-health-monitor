@@ -15,7 +15,6 @@
  */
 
 use bollard::models::{Health, HealthStatusEnum};
-use opentelemetry::Value;
 
 #[derive(Clone, PartialEq)]
 pub struct ContainerHealth {
@@ -52,12 +51,11 @@ impl From<Option<Health>> for ContainerHealth {
     }
 }
 
-impl From<ContainerHealth> for Value {
+impl From<ContainerHealth> for String {
     fn from(value: ContainerHealth) -> Self {
         match value.container_health_status {
             Some(health_status) => format!("{health_status}"),
-            None => "null".to_string(),
+            None => "".to_string(),
         }
-        .into()
     }
 }

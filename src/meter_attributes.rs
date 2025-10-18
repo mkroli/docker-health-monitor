@@ -14,48 +14,30 @@
  * limitations under the License.
  */
 
-use bollard::models::ContainerSummary;
-use opentelemetry::{KeyValue, Value};
+use bollard::secret::ContainerSummary;
+use prometheus_client::encoding::EncodeLabelSet;
 
-pub trait OptionalAttribute {
-    fn attribute(self, key: &str) -> Option<KeyValue>;
+#[derive(Debug, Clone, Eq, Hash, PartialEq, EncodeLabelSet)]
+pub struct ContainerSummaryLabels {
+    pub id: Option<String>,
+    pub image: Option<String>,
+    pub name: Option<String>,
+    pub health: Option<String>,
 }
 
-impl<T> OptionalAttribute for Option<T>
-where
-    Value: From<T>,
-{
-    fn attribute(self, key: &str) -> Option<KeyValue> {
-        self.map(|value| KeyValue::new(key.to_string(), value))
-    }
-}
-
-pub trait MeterAttributes {
-    fn attributes(self) -> Vec<KeyValue>;
-}
-
-impl MeterAttributes for ContainerSummary {
-    fn attributes(self) -> Vec<KeyValue> {
-        let id = self.id.attribute("id");
-        let name = self
+impl From<ContainerSummary> for ContainerSummaryLabels {
+    fn from(c: ContainerSummary) -> Self {
+        let name = c
             .names
-            .and_then(|names| names.first().cloned())
+            .iter()
+            .flat_map(|names| names.first().cloned())
             .map(|name| name.strip_prefix('/').map_or(name.clone(), String::from))
-            .attribute("name");
-        let image = self.image.attribute("image");
-
-        let labels: Vec<KeyValue> = self
-            .labels
-            .map(|labels| {
-                labels
-                    .into_iter()
-                    .map(|(k, v)| KeyValue::new(format!("label_{k}"), v))
-                    .collect()
-            })
-            .unwrap_or_default();
-
-        let mut attributes: Vec<KeyValue> = vec![id, name, image].into_iter().flatten().collect();
-        attributes.extend(labels);
-        attributes
+            .next();
+        ContainerSummaryLabels {
+            id: c.id,
+            image: c.image,
+            name,
+            health: None,
+        }
     }
 }

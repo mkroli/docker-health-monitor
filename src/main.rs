@@ -16,6 +16,7 @@
 
 use anyhow::Result;
 use clap::Parser;
+use prometheus_client::registry::Registry;
 
 use crate::cli::Cli;
 use crate::metrics::Metrics;
@@ -34,12 +35,14 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
 
     let docker = cli.connection.connect()?;
-    let metrics = Metrics::new()?;
-    let meter = metrics.meter_provider();
-    let server = tokio::spawn(metrics.run(cli.prometheus_address));
+    let mut registry = Registry::with_prefix(env!("CARGO_PKG_NAME").replace("-", "_"));
 
     let interval = cli.restart_interval();
-    let monitor = DockerHealthMonitor::new(docker, interval, &meter).await?;
+    let monitor = DockerHealthMonitor::new(docker, interval, &mut registry).await?;
+
+    let metrics = Metrics::new(registry);
+    let server = tokio::spawn(metrics.run(cli.prometheus_address));
+
     let (server, monitor) = tokio::join!(server, monitor.run());
     monitor?;
     server??;
