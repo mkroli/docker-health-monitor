@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-use bollard::secret::ContainerSummary;
+use bollard_stubs::models::ContainerSummary;
 use prometheus_client::encoding::EncodeLabelSet;
 
 #[derive(Debug, Clone, Eq, Hash, PartialEq, EncodeLabelSet)]

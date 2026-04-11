@@ -25,6 +25,7 @@ clap = { version = "4", features = ["derive", "env"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "time"] }
 futures = "0.3"
 bollard = "0.20"
+bollard-stubs = "1.52.1-rc.29.1.3"
 prometheus-client = "0.24"
 axum = { version = "0.8", default-features = false, features = [
     "tokio",
