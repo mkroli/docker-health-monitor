@@ -20,7 +20,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
-      - 9092:9092
+      - 9090:9090
 ```
 
 ## Usage
@@ -30,7 +30,7 @@ Prometheus exporter of docker container's health checks with the option to resta
 Usage: docker-health-monitor [OPTIONS]
 
 Options:
-      --prometheus <ADDRESS>             [env: DHM_PROMETHEUS_ADDRESS=] [default: 0.0.0.0:9092]
+      --prometheus <ADDRESS>             [env: DHM_PROMETHEUS_ADDRESS=] [default: 0.0.0.0:9090]
       --restart-interval <MILLISECONDS>  [env: DHM_RESTART_INTERVAL=]
   -h, --help                             Print help
   -V, --version                          Print version

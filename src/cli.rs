@@ -34,7 +34,7 @@ pub struct Cli {
     #[arg(
         long = "prometheus",
         value_name = "ADDRESS",
-        default_value_t = SocketAddr::new(IpAddr::from(Ipv4Addr::UNSPECIFIED), 9092),
+        default_value_t = SocketAddr::new(IpAddr::from(Ipv4Addr::UNSPECIFIED), 9090),
         env = "DHM_PROMETHEUS_ADDRESS",
     )]
     pub prometheus_address: SocketAddr,
